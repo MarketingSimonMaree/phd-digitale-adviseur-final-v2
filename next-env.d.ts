@@ -1,5 +1,4 @@
-/// <reference types="next" />
-/// <reference types="next/image-types/global" />
-
-// NOTE: This file should not be edited
-// see https://nextjs.org/docs/basic-features/typescript for more information.
+HEYGEN_API_KEY=NTJjZjZiMDEyNmVkNDIzYTkwYzY5ZTlmZThhZjk0NzctMTczODIzMjYzOQ==
+AVATAR_ID=00e7b435191b4dcc85936073262b9aa8
+KNOWLEDGE_BASE_ID=6a065e56b4a74f7a884d8323e10ceb90
+NEXT_PUBLIC_AVATAR_VOICE_ID="b9772fdb95e349d68280921077602008"
