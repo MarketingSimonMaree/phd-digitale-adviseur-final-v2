@@ -12,15 +12,15 @@ interface Props {
 
 export default function ChatMessages({ messages, onClear }: Props) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
+  
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
+  
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
+  
   return (
     <div className="mb-4 h-[30vh] flex flex-col w-[68%] ml-auto mr-4">
       {/* Header met transparante achtergrond */}
@@ -33,9 +33,12 @@ export default function ChatMessages({ messages, onClear }: Props) {
           ✕
         </button>
       </div>
-
-      {/* Berichten container */}
-      <div className="overflow-y-auto flex-1 p-4">
+      
+      {/* Berichten container met fade effect aan bovenkant */}
+      <div className="overflow-y-auto flex-1 p-4 relative">
+        {/* Fade effect at the top */}
+        <div className="absolute top-0 left-0 right-0 h-10 bg-gradient-to-b from-black/20 to-transparent z-10 pointer-events-none" />
+        
         {messages.map((message, index) => (
           <div
             key={index}
@@ -58,4 +61,4 @@ export default function ChatMessages({ messages, onClear }: Props) {
       </div>
     </div>
   );
-} 
+}
