@@ -228,11 +228,16 @@ export default function InteractiveAvatar({ children }: Props) {
     // USER_TALKING_MESSAGE: Triggered with user speech transcript
     avatar.current.on(StreamingEvents.USER_TALKING_MESSAGE, (event) => {
       console.log("User talking message:", event.detail);
+      // Check if we're in voice mode and there's a message
       if (event.detail?.message && chatMode === "voice_mode") {
-        setMessages(prev => [...prev, {
-          text: event.detail.message,
-          sender: 'user'
-        }]);
+        const userMessage = event.detail.message.trim();
+        if (userMessage) {
+          console.log("Adding user message:", userMessage);
+          setMessages(prev => [...prev, {
+            text: userMessage,
+            sender: 'user'
+          }]);
+        }
       }
     });
     
@@ -322,6 +327,7 @@ export default function InteractiveAvatar({ children }: Props) {
         setIsUserTalking(false);
       } else {
         setText('');
+        console.log("Voice mode activated - ready to capture user speech");
         // Start voice chat with explicit configuration from API reference
         await (avatar.current as any).startVoiceChat({
           useSilencePrompt: false,  // Don't prompt user during silence periods
