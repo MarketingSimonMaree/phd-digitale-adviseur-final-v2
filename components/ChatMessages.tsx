@@ -24,8 +24,8 @@ export default function ChatMessages({ messages, onClear }: Props) {
   return (
     // Verkleind met 5% (van 68% naar 63% breedte)
     <div className="mb-4 h-[30vh] flex flex-col w-[63%] ml-auto mr-4">
-      {/* Header met transparante achtergrond voor fade effect */}
-      <div className="sticky top-0 z-10 p-3 flex justify-between items-center bg-gradient-to-b from-transparent to-transparent">
+      {/* Header met kruisknop */}
+      <div className="sticky top-0 z-20 p-3 flex justify-between items-center">
         <span className="text-lg text-white/90 font-medium"></span>
         <button 
           className="w-6 h-6 rounded-full flex items-center justify-center bg-white/20 hover:bg-[#ce861b] text-white transition-colors"
@@ -35,13 +35,17 @@ export default function ChatMessages({ messages, onClear }: Props) {
         </button>
       </div>
       
-      {/* Berichten container met maskering voor geleidelijke transparantie aan de bovenkant */}
-      <div className="overflow-y-auto flex-1 p-4">
-        {/* Hier gebruiken we geen aparte overlay div, maar een mask-image op de container zelf */}
-        <div className="space-y-2" style={{
-          maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%)'
-        }}>
+      {/* Berichten container met sticky fade-out aan de bovenkant */}
+      <div className="overflow-y-auto flex-1 p-4 relative">
+        {/* Sticky fade-out overlay die bovenop de berichten blijft tijdens het scrollen */}
+        <div className="sticky top-0 left-0 right-0 h-16 z-10 pointer-events-none" 
+             style={{
+               background: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)'
+             }}
+        />
+        
+        {/* Berichten */}
+        <div className="space-y-2 relative">
           {messages.map((message, index) => (
             <div
               key={index}
@@ -60,8 +64,8 @@ export default function ChatMessages({ messages, onClear }: Props) {
               </div>
             </div>
           ))}
+          <div ref={messagesEndRef} />
         </div>
-        <div ref={messagesEndRef} />
       </div>
     </div>
   );
