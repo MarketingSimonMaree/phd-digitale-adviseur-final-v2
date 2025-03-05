@@ -140,6 +140,22 @@ export default function InteractiveAvatar({ children }: Props) {
       // Set default mode to text
       setChatMode("text_mode");
       
+      // Wacht even en start dan voice chat
+      setTimeout(async () => {
+        try {
+          if (avatar.current) {
+            await (avatar.current as any).startVoiceChat({
+              useSilencePrompt: true,  // Gewijzigd naar true
+              silenceTimeout: 5000,    // Optioneel: 5 seconden stilte timeout
+              isInputAudioMuted: false
+            });
+          }
+        } catch (error) {
+          console.error("Error starting voice chat:", error);
+          setDebug(`Voice chat error: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }, 100);
+      
     } catch (error) {
       console.error("Error starting avatar session:", error);
       setDebug(`Session error: ${error instanceof Error ? error.message : String(error)}`);
@@ -315,29 +331,57 @@ export default function InteractiveAvatar({ children }: Props) {
   }
 
   // Change chat mode between text and voice
-  const handleChangeChatMode = useMemoizedFn(async (mode) => {
-    if (mode === chatMode || !avatar.current) {
+  const handleChangeChatMode = useMemoizedFn(async (v) => {
+    if (v === chatMode || !avatar.current) {
       return;
     }
     
     try {
-      if (mode === "text_mode") {
-        // Close voice chat according to API reference
-        await (avatar.current as any).closeVoiceChat();
-        setIsUserTalking(false);
+      // Update UI onmiddellijk voor betere responsiviteit
+      setChatMode(v);
+      
+      if (v === "text_mode") {
+        // Wacht een korte tijd voor WebSocket verbinding
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        try {
+          await avatar.current.closeVoiceChat();
+          setIsUserTalking(false);
+        } catch (error) {
+          console.error("Error closing voice chat (can be ignored if related to WebSocket state):", error);
+          // Negeer WebSocket-specifieke fouten
+          if (!(error instanceof Error && error.message.includes("WebSocket"))) {
+            setDebug("Fout bij sluiten voice chat: " + (error as Error).message);
+          }
+        }
       } else {
         setText('');
-        console.log("Voice mode activated - ready to capture user speech");
-        // Start voice chat with explicit configuration from API reference
-        await (avatar.current as any).startVoiceChat({
-          useSilencePrompt: false,  // Don't prompt user during silence periods
-          isInputAudioMuted: false  // Allow microphone input
-        });
+        console.log("Voice mode activated");
+        
+        // Timeout voor betere UI responsiviteit
+        setTimeout(async () => {
+          try {
+            if (avatar.current) {
+              await (avatar.current as any).startVoiceChat({
+                useSilencePrompt: true,
+                isInputAudioMuted: false
+              });
+            }
+          } catch (error) {
+            console.error("Error starting voice chat:", error);
+            if (!(error instanceof Error && error.message.includes("WebSocket"))) {
+              setDebug("Fout bij starten voice chat: " + (error as Error).message);
+            }
+          }
+        }, 300);
       }
-      setChatMode(mode);
+      
+      console.log("Chat mode changed to:", v);
     } catch (error) {
       console.error("Error changing chat mode:", error);
-      setDebug(`Chat mode error: ${error instanceof Error ? error.message : String(error)}`);
+      if (!(error instanceof Error && error.message.includes("WebSocket"))) {
+        setDebug("Fout bij wisselen chat modus: " + (error as Error).message);
+      }
     }
   });
 
@@ -463,14 +507,14 @@ export default function InteractiveAvatar({ children }: Props) {
             {stream && (
               <div className="absolute bottom-24 left-4 flex gap-2">
                 <Button
-                  className={`flex items-center justify-center gap-2 h-12 transition-all ${
+                  className={`flex items-center justify-center gap-2 h-10 transition-all ${
                     chatMode === "text_mode" 
-                      ? "bg-amber-500 text-white w-32"
-                      : "bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm w-12"
+                      ? "bg-[#ce861b] text-white w-24"
+                      : "bg-white/80 text-gray-700 hover:bg-white/90 backdrop-blur-sm w-10"
                   }`}
-                  onClick={() => handleChangeChatMode("text_mode")}
+                  onClick={() => stream ? handleChangeChatMode("text_mode") : handleDisabledClick()}
                 >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M4 5h16v10H4z" />
                     <path d="M8 15v2m4-2v2m4-2v2" />
                     <path d="M7 9h2m2 0h2m2 0h2" />
@@ -478,14 +522,17 @@ export default function InteractiveAvatar({ children }: Props) {
                   {chatMode === "text_mode" && <span>Typen</span>}
                 </Button>
                 <Button
-                  className={`flex items-center justify-center gap-2 h-12 transition-all ${
+                  className={`flex items-center justify-center gap-2 h-10 transition-all ${
                     chatMode === "voice_mode" 
-                      ? "bg-amber-500 text-white w-32"
-                      : "bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm w-12"
+                      ? "bg-[#ce861b] text-white w-24"
+                      : "bg-white/80 text-gray-700 hover:bg-white/90 backdrop-blur-sm w-10"
                   }`}
-                  onClick={() => handleChangeChatMode("voice_mode")}
+                  onClick={() => stream ? handleChangeChatMode("voice_mode") : handleDisabledClick()}
                 >
-                  <Mic size={22} />
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" />
+                  </svg>
                   {chatMode === "voice_mode" && <span>Spreken</span>}
                 </Button>
               </div>
